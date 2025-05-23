@@ -154,3 +154,51 @@ Here you can see:
 * **Server** (bottom-left) now listening on port 8080 and logging connections from three clients.
 * **Clients** (other windows) each show the broadcasted messages: “keren”, “hello”, and “banget”.
 
+## Small changes. Add some information to client
+
+
+We try to add information about the sender to each client. Since we don’t have a name yet, we simply include the sender’s IP:Port in every broadcasted message. This lets you see exactly which client sent each message, without implementing a full username system yet.
+
+### 1. What and where to modify
+
+- **Server** (`server/src/main.rs`):  
+  Change the broadcast line to include `addr` (the client’s `SocketAddr`):
+  ```diff
+  - bcast_tx.send(text.clone())?;
+  + bcast_tx.send(format!("{addr} : {text}"))?;
+
+
+* **Client** (`client/src/main.rs`):
+  In the receive loop, prepend a local identifier (e.g. your machine’s name) so you know which output belongs to you:
+
+  ```diff
+  - println!("From server: {}", text);
+  + println!("Brian's Computer - From server: {}", text);
+  ```
+
+No other files need editing—communication still runs over raw TCP wrapped in WebSocket frames, carrying newline-delimited UTF-8.
+
+### 2. Why these changes?
+
+* **IP\:Port tag**
+  Without user accounts, seeing the sender’s `SocketAddr` (IP and port) clearly distinguishes messages coming from different clients.
+* **Local prefix**
+  Adding `"Brian's Computer"` simulates a hostname or username, making it easier to tell which client window printed which line when you have multiple terminals open.
+
+### 3. Demo (Small changes)
+
+![Small changes demo](img/Third_img.png)
+
+In this screenshot:
+
+* Each **client** prints lines like:
+
+  ```
+  Brian's Computer - From server: 127.0.0.1:56075 : halo
+  ```
+* The **server** still logs the raw inbound address and message:
+
+  ```
+  From client 127.0.0.1:56075 "halo"
+  ```
+
