@@ -3,7 +3,7 @@
 Muhammad Brian Subekti 2306256444
 
 
-
+## 2.1 Original code of broadcast chat.
 
 ##  How to run
 
@@ -86,4 +86,71 @@ In the screenshot above:
 
         1. **Reader**: listens for incoming broadcasts and prints them.
         2. **Writer**: reads your keyboard input and sends it to the server.
+
+
+## 2.2 Modifiying the web socket port
+
+
+### 1. Where to modify
+
+* **Server** (`server/src/main.rs`):
+
+  ```diff
+  - let listener = TcpListener::bind("127.0.0.1:2000").await?;
+  + let listener = TcpListener::bind("127.0.0.1:8080").await?;
+  ```
+
+* **Client** (`client/src/main.rs`):
+
+  ```diff
+  - let socket = TcpStream::connect("127.0.0.1:2000").await?;
+  + let socket = TcpStream::connect("127.0.0.1:8080").await?;
+  ```
+
+There are no other port references—this is raw TCP with newline-delimited UTF-8, not HTTP or WebSocket.
+
+### 2. Expected behavior when mismatched
+
+If one side still uses port 2000 and the other port 8080, clients will immediately see:
+
+```
+Connection refused (os error 10061)
+```
+
+because nothing is listening on the target port.
+
+### 3. Testing on port 8080
+
+1. Rebuild and start the server:
+
+   ```sh
+   cargo run --bin server
+   ```
+
+   You should see:
+
+   ```
+   listening on port 8080
+   New connection from 127.0.0.1:xxxxx
+   From client 127.0.0.1:xxxxx: "hello"
+   ```
+2. In separate terminals, run each client:
+
+   ```sh
+   cargo run --bin client
+   ```
+3. Type messages—each client should receive:
+
+   ```
+   From server: <your message>
+   ```
+
+### 4. Demo (Port 8080)
+
+![Proof of Running on 8080](img/Second_img.png)
+
+Here you can see:
+
+* **Server** (bottom-left) now listening on port 8080 and logging connections from three clients.
+* **Clients** (other windows) each show the broadcasted messages: “keren”, “hello”, and “banget”.
 
